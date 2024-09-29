@@ -18,29 +18,15 @@ public class AuthenticationController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> SignIn([FromBody] SignInUserDTO dto)
     {
-        try
-        {
-            return Ok(await _authentificationService.SignIn(dto));
-        }
-        catch
-        {
-            return Unauthorized();
-        }
+        return Ok(await _authentificationService.SignIn(dto));
     }
 
     [HttpPost]
     public async Task<IActionResult> SignUp([FromBody] SignUpUserDTO dto)
     {
-        try
-        {
-            await _authentificationService.SignUp(dto);
+        await _authentificationService.SignUp(dto);
 
-            return Ok();
-        }
-        catch
-        {
-            return BadRequest();
-        }
+        return Ok();
     }
 
     [HttpGet]
@@ -54,28 +40,14 @@ public class AuthenticationController : ControllerBase
     [Route("~/api/[controller]/SignOut")]
     public async Task<IActionResult> SignOutUser()
     {
-        try
-        {
-            await _authentificationService.SignOut();
+        await _authentificationService.SignOut();
 
-            return Ok();
-        }
-        catch
-        {
-            return StatusCode(500);
-        }
+        return Ok();
     }
 
     [HttpPost]
     public async Task<IActionResult> Refresh(UserTokenDTO dto)
     {
-        try
-        {
-            return Ok(await _authentificationService.RefreshToken(dto));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
+        return Ok(await _authentificationService.RefreshToken(dto));
     }
 }

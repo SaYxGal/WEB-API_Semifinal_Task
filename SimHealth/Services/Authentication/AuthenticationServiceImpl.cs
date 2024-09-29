@@ -30,13 +30,13 @@ public class AuthenticationServiceImpl : IAuthenticationService
     {
         var user = await _userManager.FindByNameAsync(dto.UserName);
 
-        if (user != null && await _userManager.CheckPasswordAsync(user, dto.Password))
+        if (user != null && !user.IsDeleted && await _userManager.CheckPasswordAsync(user, dto.Password))
         {
             return await _tokenService.GenerateToken(user);
         }
         else
         {
-            throw new Exception(); //Replace after global handling 400
+            throw new UnauthorizedAccessException("Логин или пароль пользователя указаны некорректно");
         }
     }
 
@@ -50,7 +50,7 @@ public class AuthenticationServiceImpl : IAuthenticationService
         var userExists = await _userManager.FindByNameAsync(dto.UserName);
         if (userExists != null)
         {
-            throw new Exception();//Replace after global handling 400
+            throw new ApplicationException("Пользователь с таким логином уже существует");
         }
 
         var user = new User()
@@ -58,13 +58,16 @@ public class AuthenticationServiceImpl : IAuthenticationService
             SecurityStamp = Guid.NewGuid().ToString()
         };
 
-        await _userManager.AddToRoleAsync(user, UserRole.User);
-
         _mapper.Map(dto, user);
 
         var result = await _userManager.CreateAsync(user, dto.Password);
+
         if (!result.Succeeded)
-            throw new Exception();//Replace after global handling 500
+            throw new ApplicationException(result.Errors
+                .Select(x => string.Format("{0}:{1}", x.Code, x.Description))
+                .Aggregate((current, next) => current + ", " + next));
+
+        await _userManager.AddToRoleAsync(user, UserRole.User);
     }
 
     public async Task<bool> ValidateToken(string accessToken)

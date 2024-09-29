@@ -1,4 +1,7 @@
-﻿namespace AuthenticationService.Middleware;
+﻿using AuthenticationService.Models.Exception;
+using System.Net;
+
+namespace AuthenticationService.Middleware;
 
 public class ExceptionHandlerMiddleware
 {
@@ -23,6 +26,16 @@ public class ExceptionHandlerMiddleware
 
     private async Task HandleExceptionAsync(HttpContext context, Exception ex)
     {
+        ExceptionResponse response = ex switch
+        {
+            ApplicationException _ => new ExceptionResponse(HttpStatusCode.BadRequest, ex.Message),
+            KeyNotFoundException _ => new ExceptionResponse(HttpStatusCode.NotFound, ex.Message),
+            UnauthorizedAccessException _ => new ExceptionResponse(HttpStatusCode.Unauthorized, ex.Message),
+            _ => new ExceptionResponse(HttpStatusCode.InternalServerError, ex.Message, ex.InnerException?.Message)
+        };
 
+        context.Response.ContentType = "application/json";
+        context.Response.StatusCode = (int)response.StatusCode;
+        await context.Response.WriteAsJsonAsync(response);
     }
 }

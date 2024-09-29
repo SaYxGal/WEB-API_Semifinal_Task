@@ -2,8 +2,8 @@
 
 public static class UserRole
 {
-    public const string Admin = "ADMIN";
-    public const string User = "USER";
-    public const string Manager = "MANAGER";
-    public const string Doctor = "DOCTOR";
+    public const string Admin = "Admin";
+    public const string User = "User";
+    public const string Manager = "Manager";
+    public const string Doctor = "Doctor";
 }

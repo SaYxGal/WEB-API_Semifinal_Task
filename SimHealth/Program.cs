@@ -1,6 +1,8 @@
 using AuthenticationService.Confuguration;
 using AuthenticationService.Data;
+using AuthenticationService.Middleware;
 using AuthenticationService.Models.Users;
+using AuthenticationService.Services.Account;
 using AuthenticationService.Services.Authentication;
 using AuthenticationService.Services.JWT;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -49,6 +51,8 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidAudience = jwtSettings.Audience,
         ValidIssuer = jwtSettings.Issuer,
+        ClockSkew = TimeSpan.Zero,
+        ValidateLifetime = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey))
     };
 });
@@ -57,6 +61,7 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddTransient<TokenService>();
 builder.Services.AddTransient<IAuthenticationService, AuthenticationServiceImpl>();
+builder.Services.AddTransient<IAccountService, AccountService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -106,6 +111,8 @@ using (var scope = app.Services.CreateScope())
 
     await DBSeeder.Seed(services);
 }
+
+app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
