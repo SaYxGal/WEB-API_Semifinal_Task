@@ -91,9 +91,12 @@ public class AccountService : IAccountService
             _mapper.Map(dto, user);
         }
 
-        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        if (!await _userManager.CheckPasswordAsync(user, dto.Password))
+        {
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-        ProcessErrors(await _userManager.ResetPasswordAsync(user, token, dto.Password));
+            ProcessErrors(await _userManager.ResetPasswordAsync(user, token, dto.Password));
+        }
 
         ProcessErrors(await _userManager.UpdateAsync(user));
     }

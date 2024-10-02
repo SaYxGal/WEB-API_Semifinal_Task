@@ -4,6 +4,7 @@ using AuthenticationService.Middleware;
 using AuthenticationService.Models.Users;
 using AuthenticationService.Services.Account;
 using AuthenticationService.Services.Authentication;
+using AuthenticationService.Services.Doctor;
 using AuthenticationService.Services.JWT;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -62,6 +63,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddTransient<TokenService>();
 builder.Services.AddTransient<IAuthenticationService, AuthenticationServiceImpl>();
 builder.Services.AddTransient<IAccountService, AccountService>();
+builder.Services.AddTransient<IDoctorService, DoctorService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

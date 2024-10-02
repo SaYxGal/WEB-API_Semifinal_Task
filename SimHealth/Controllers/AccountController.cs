@@ -3,9 +3,10 @@ using AuthenticationService.Models.Users.DTO;
 using AuthenticationService.Services.Account;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace AuthenticationService.Controllers;
-[Route("api/[controller]")]
+[Route("api/[controller]s")]
 [ApiController]
 [Authorize]
 public class AccountController : ControllerBase
@@ -24,7 +25,7 @@ public class AccountController : ControllerBase
     }
 
     [HttpPut("Update")]
-    public async Task<IActionResult> Update([FromBody] UpdateUserDTO dto)
+    public async Task<IActionResult> Update([FromBody][Required] UpdateUserDTO dto)
     {
         var user = await _accountService.Get(User);
 
@@ -35,14 +36,14 @@ public class AccountController : ControllerBase
 
     [HttpGet]
     [Authorize(Roles = UserRole.Admin)]
-    public async Task<IActionResult> GetAll(int from, int count)
+    public async Task<IActionResult> GetAll([FromQuery][Required] int from, [FromQuery][Required] int count)
     {
         return Ok(await _accountService.GetAll(from, count));
     }
 
     [HttpPost]
     [Authorize(Roles = UserRole.Admin)]
-    public async Task<IActionResult> Create([FromBody] CreateUserDTO dto)
+    public async Task<IActionResult> Create([FromBody][Required] CreateUserDTO dto)
     {
         await _accountService.Create(dto);
 
@@ -51,7 +52,7 @@ public class AccountController : ControllerBase
 
     [HttpPut("{id}")]
     [Authorize(Roles = UserRole.Admin)]
-    public async Task<IActionResult> Update(string id, [FromBody] UpdateUserAdminDTO dto)
+    public async Task<IActionResult> Update([FromRoute][Required] string id, [FromBody][Required] UpdateUserAdminDTO dto)
     {
         await _accountService.Update(id, dto);
 
@@ -60,7 +61,7 @@ public class AccountController : ControllerBase
 
     [HttpDelete("{id}")]
     [Authorize(Roles = UserRole.Admin)]
-    public async Task<IActionResult> Delete(string id)
+    public async Task<IActionResult> Delete([FromRoute][Required] string id)
     {
         await _accountService.Delete(id);
 

@@ -2,6 +2,7 @@
 using AuthenticationService.Services.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace AuthenticationService.Controllers;
 [Route("api/[controller]/[action]")]
@@ -16,13 +17,13 @@ public class AuthenticationController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> SignIn([FromBody] SignInUserDTO dto)
+    public async Task<IActionResult> SignIn([FromBody][Required] SignInUserDTO dto)
     {
         return Ok(await _authentificationService.SignIn(dto));
     }
 
     [HttpPost]
-    public async Task<IActionResult> SignUp([FromBody] SignUpUserDTO dto)
+    public async Task<IActionResult> SignUp([FromBody][Required] SignUpUserDTO dto)
     {
         await _authentificationService.SignUp(dto);
 
@@ -30,7 +31,7 @@ public class AuthenticationController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Validate(string accessToken)
+    public async Task<IActionResult> Validate([FromQuery][Required] string accessToken)
     {
         return Ok(await _authentificationService.ValidateToken(accessToken));
     }
@@ -46,7 +47,7 @@ public class AuthenticationController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Refresh(UserTokenDTO dto)
+    public async Task<IActionResult> Refresh([FromBody][Required] UserTokenDTO dto)
     {
         return Ok(await _authentificationService.RefreshToken(dto));
     }
