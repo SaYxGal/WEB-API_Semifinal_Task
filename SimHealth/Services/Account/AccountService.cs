@@ -62,9 +62,9 @@ public class AccountService : IAccountService
         return result;
     }
 
-    public Task<List<GetUserListDTO>> GetAll(int from, int count)
+    public async Task<List<GetUserListDTO>> GetAll(int from, int count)
     {
-        return
+        return await
             _dataContext.Users
                 .Where(x => !x.IsDeleted)
                 .Skip(from - 1).Take(count)

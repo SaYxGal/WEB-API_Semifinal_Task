@@ -118,10 +118,11 @@ public class TokenService
         return new TokenValidationParameters
         {
             ValidateAudience = false,
-            ValidateIssuer = false,
+            ValidateIssuer = true,
+            ValidIssuer = _jwtSettings.Issuer,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey)),
-            ValidateLifetime = false
+            ValidateLifetime = true
         };
     }
 
