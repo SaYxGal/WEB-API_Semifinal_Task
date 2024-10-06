@@ -1,4 +1,5 @@
-﻿using AuthenticationService.Models.Users;
+﻿using AuthenticationService.Models.JWT;
+using AuthenticationService.Models.Users;
 using AuthenticationService.Models.Users.DTO;
 using AuthenticationService.Services.JWT;
 using AutoMapper;
@@ -70,7 +71,7 @@ public class AuthenticationServiceImpl : IAuthenticationService
         await _userManager.AddToRoleAsync(user, UserRole.User);
     }
 
-    public async Task<bool> ValidateToken(string accessToken)
+    public async Task<JWTTokenValidationResult> ValidateToken(string accessToken)
     {
         return await _tokenService.ValidateToken(accessToken);
     }

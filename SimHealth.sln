@@ -5,7 +5,12 @@ VisualStudioVersion = 17.11.35222.181
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthenticationService", "SimHealth\AuthenticationService.csproj", "{8AAE1984-0E21-499D-BF50-DD2BA26E5020}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HospitalService", "HospitalService\HospitalService.csproj", "{B36CB79D-6C60-474E-8257-ACD2CBF2DE88}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HospitalService", "HospitalService\HospitalService.csproj", "{B36CB79D-6C60-474E-8257-ACD2CBF2DE88}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{41449721-CB25-40B9-9DAA-9B13E57255AD}"
+	ProjectSection(SolutionItems) = preProject
+		docker-compose.yml = docker-compose.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

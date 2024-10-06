@@ -1,4 +1,5 @@
 ﻿using AuthenticationService.Confuguration;
+using AuthenticationService.Models.JWT;
 using AuthenticationService.Models.Users;
 using AuthenticationService.Models.Users.DTO;
 using Microsoft.AspNetCore.Identity;
@@ -54,13 +55,15 @@ public class TokenService
         return response;
     }
 
-    public async Task<bool> ValidateToken(string accessToken)
+    public async Task<JWTTokenValidationResult> ValidateToken(string accessToken)
     {
         var validationParameters = GetValidationParameters();
 
         var result = await new JwtSecurityTokenHandler().ValidateTokenAsync(accessToken, validationParameters);
 
-        return result.IsValid;
+        return new JWTTokenValidationResult(
+            result.IsValid,
+            result.ClaimsIdentity.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList());
     }
 
     public async Task<UserTokenDTO> RefreshToken(UserTokenDTO tokens)

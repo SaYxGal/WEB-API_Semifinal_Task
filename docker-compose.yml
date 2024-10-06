@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  postgres_auth:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: user_password
+      POSTGRES_DB: AuthDB
+    ports:
+      - "5432:5432"
+    networks:
+      net:
+    volumes:
+      - data_auth:/var/lib/postgresql/data
+  auth:
+    build: ./AuthenticationService
+    ports:
+      - "5000:80"
+    networks:
+      net:
+    depends_on:
+      - postgres_auth
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 80
+      ConnectionStrings__DefaultConnection: "Host=postgres;Database=AuthDB;Username=user;Password=user_password"
+  
+  postgres_hospital:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: user_password
+      POSTGRES_DB: HospitalDB
+    ports:
+      - "5433:5432"
+    networks:
+      net:
+    volumes:
+      - data_hospital:/var/lib/postgresql/data
+
+  hospital:
+    build: ./HospitalService
+    ports:
+      - "5001:80"
+    networks:
+      net:
+    depends_on:
+      - postgres_hospital
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 80
+      ConnectionStrings__DefaultConnection: "Host=postgres;Database=HospitalDB;Username=user;Password=user_password"
+
+volumes:
+  data_auth:
+  data_hospital:
+  
+networks:
+  net:

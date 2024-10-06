@@ -1,4 +1,5 @@
-﻿using AuthenticationService.Models.Users.DTO;
+﻿using AuthenticationService.Models.JWT;
+using AuthenticationService.Models.Users.DTO;
 
 namespace AuthenticationService.Services.Authentication;
 
@@ -10,7 +11,7 @@ public interface IAuthenticationService
 
     public Task SignOut();
 
-    public Task<bool> ValidateToken(string accessToken);
+    public Task<JWTTokenValidationResult> ValidateToken(string accessToken);
 
     public Task<UserTokenDTO> RefreshToken(UserTokenDTO tokens);
 }
