@@ -37,9 +37,9 @@ namespace TimetableService.Data.Migrations
                         .HasColumnName("user_id");
 
                     b.HasKey("TimetableId", "Time")
-                        .HasName("pk_appointment");
+                        .HasName("pk_appointments");
 
-                    b.ToTable("appointment", (string)null);
+                    b.ToTable("appointments", (string)null);
                 });
 
             modelBuilder.Entity("TimetableService.Models.Timetables.Timetable", b =>
@@ -86,7 +86,7 @@ namespace TimetableService.Data.Migrations
                         .HasForeignKey("TimetableId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_appointment_timetables_timetable_id");
+                        .HasConstraintName("fk_appointments_timetables_timetable_id");
                 });
 
             modelBuilder.Entity("TimetableService.Models.Timetables.Timetable", b =>

@@ -40,45 +40,7 @@ public class TimetableController : ControllerBase
         {
             if (validRequestResponse.Roles.Where(i => i == UserRole.Admin || i == UserRole.Manager).Any())
             {
-                var doctorRequest = new HttpRequestMessage()
-                {
-                    RequestUri = new Uri(_baseAddresses.AuthService + _doctorGetUrl + dto.DoctorId),
-                    Method = HttpMethod.Get,
-                };
-
-                doctorRequest.Headers.TryAddWithoutValidation("Authorization", authorization);
-
-                var isDoctorExistsResponse = await _httpClient.SendAsync(doctorRequest);
-
-                var hospitalRequest = new HttpRequestMessage()
-                {
-                    RequestUri = new Uri(_baseAddresses.HospitalService + _hospitalGetUrl + dto.HospitalId + "/Rooms"),
-                    Method = HttpMethod.Get,
-                };
-
-                hospitalRequest.Headers.TryAddWithoutValidation("Authorization", authorization);
-
-                var hospitalRoomsResponse = await _httpClient.SendAsync(hospitalRequest);
-
-
-                if (!isDoctorExistsResponse.IsSuccessStatusCode)
-                {
-                    ModelState.AddModelError("", $"Доктор с id {dto.DoctorId} не найден");
-                }
-
-                if (!hospitalRoomsResponse.IsSuccessStatusCode)
-                {
-                    ModelState.AddModelError("", $"Больница с id {dto.HospitalId} не найдена");
-                }
-                else
-                {
-                    var rooms = JsonConvert.DeserializeObject<List<string>>(await hospitalRoomsResponse.Content.ReadAsStringAsync());
-
-                    if (rooms == null || !rooms.Where(i => i == dto.Room).Any())
-                    {
-                        ModelState.AddModelError("", $"Кабинет с названием {dto.Room} не найден");
-                    }
-                }
+                await ValidateTimetableValues(dto.DoctorId, dto.HospitalId, dto.Room, authorization);
 
                 if (ModelState.IsValid)
                 {
@@ -98,7 +60,42 @@ public class TimetableController : ControllerBase
         {
             return Unauthorized();
         }
+    }
 
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update([FromRoute][Required] int id, [FromBody][Required] UpdateTimetableRecordDTO dto, [FromHeader] string? authorization)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+
+        var validRequestResponse = await ValidateUser(authorization);
+
+        if (validRequestResponse.IsValid)
+        {
+            if (validRequestResponse.Roles.Where(i => i == UserRole.Admin || i == UserRole.Manager).Any())
+            {
+                await ValidateTimetableValues(dto.DoctorId, dto.HospitalId, dto.Room, authorization);
+
+                if (ModelState.IsValid)
+                {
+                    await _timetableService.UpdateRecordFromTimetable(id, dto);
+
+                    return NoContent();
+                }
+
+                return BadRequest(ModelState);
+            }
+            else
+            {
+                return StatusCode(403);
+            }
+        }
+        else
+        {
+            return Unauthorized();
+        }
     }
 
     [NonAction]
@@ -120,5 +117,49 @@ public class TimetableController : ControllerBase
         var response = await _httpClient.SendAsync(validRequest);
 
         return JsonConvert.DeserializeObject<JWTTokenValidationResult>(await response.Content.ReadAsStringAsync()) ?? throw new Exception();
+    }
+
+    [NonAction]
+    private async Task ValidateTimetableValues(string doctorId, int hospitalId, string room, string? authorization)
+    {
+        var doctorRequest = new HttpRequestMessage()
+        {
+            RequestUri = new Uri(_baseAddresses.AuthService + _doctorGetUrl + doctorId),
+            Method = HttpMethod.Get,
+        };
+
+        doctorRequest.Headers.TryAddWithoutValidation("Authorization", authorization);
+
+        var isDoctorExistsResponse = await _httpClient.SendAsync(doctorRequest);
+
+        var hospitalRequest = new HttpRequestMessage()
+        {
+            RequestUri = new Uri(_baseAddresses.HospitalService + _hospitalGetUrl + hospitalId + "/Rooms"),
+            Method = HttpMethod.Get,
+        };
+
+        hospitalRequest.Headers.TryAddWithoutValidation("Authorization", authorization);
+
+        var hospitalRoomsResponse = await _httpClient.SendAsync(hospitalRequest);
+
+
+        if (!isDoctorExistsResponse.IsSuccessStatusCode)
+        {
+            ModelState.AddModelError("", $"Доктор с id {doctorId} не найден");
+        }
+
+        if (!hospitalRoomsResponse.IsSuccessStatusCode)
+        {
+            ModelState.AddModelError("", $"Больница с id {hospitalId} не найдена");
+        }
+        else
+        {
+            var rooms = JsonConvert.DeserializeObject<List<string>>(await hospitalRoomsResponse.Content.ReadAsStringAsync());
+
+            if (rooms == null || !rooms.Where(i => i == room).Any())
+            {
+                ModelState.AddModelError("", $"Кабинет с названием {room} не найден");
+            }
+        }
     }
 }

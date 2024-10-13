@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using TimetableService.Data;
 using TimetableService.Models.Appointments;
 using TimetableService.Models.Timetables;
@@ -67,8 +68,45 @@ public class TimetableServiceImpl : ITimetableService
         throw new NotImplementedException();
     }
 
-    public Task UpdateRecordFromTimetable(int id, UpdateTimetableRecordDTO dto)
+    public async Task UpdateRecordFromTimetable(int id, UpdateTimetableRecordDTO dto)
     {
-        throw new NotImplementedException();
+        var timetableRecord = await
+            _dataContext.Timetables
+                .Include(i => i.Appointments)
+                .Where(i => i.Id == id)
+                .FirstOrDefaultAsync()
+                ?? throw new ApplicationException($"Запись расписания с id - {id} не найдена");
+
+        if (timetableRecord.Appointments.Where(i => i.UserId != null).Any())
+        {
+            throw new ApplicationException($"Уже есть записавшиеся на приём, id - {id}");
+        }
+
+        _mapper.Map(dto, timetableRecord);
+
+        using var tr = _dataContext.Database.BeginTransaction();
+
+        _dataContext.Update(timetableRecord);
+        await _dataContext.SaveChangesAsync();
+
+        // Убираем старые записи на приём
+        foreach (var room in timetableRecord.Appointments.ToList())
+        {
+            _dataContext.Appointments.Remove(room);
+            timetableRecord.Appointments.Remove(room);
+        }
+
+        // Добавляем записи на приём
+        for (var i = dto.From; i < dto.To; i = i.AddMinutes(30))
+        {
+            var newAppointment = new Appointment() { Time = i };
+
+            _dataContext.Appointments.Add(newAppointment);
+            timetableRecord.Appointments.Add(newAppointment);
+        }
+
+        await _dataContext.SaveChangesAsync();
+
+        await tr.CommitAsync();
     }
 }

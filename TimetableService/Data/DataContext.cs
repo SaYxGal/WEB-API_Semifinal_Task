@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Reflection;
+using TimetableService.Models.Appointments;
 using TimetableService.Models.Timetables;
 
 namespace TimetableService.Data;
@@ -18,4 +19,5 @@ public class DataContext : DbContext
     }
 
     public DbSet<Timetable> Timetables { get; set; }
+    public DbSet<Appointment> Appointments { get; set; }
 }
