@@ -142,12 +142,12 @@ public class HospitalController : ControllerBase
     [NonAction]
     private async Task<JWTTokenValidationResult> ValidateUser(string? authorization)
     {
-        if (authorization == null || authorization.Split(' ').Length < 2)
+        if (authorization == null)
         {
             return new JWTTokenValidationResult(false, []);
         }
 
-        var queryParams = $"?accessToken={authorization.Split(' ')[1]}";
+        var queryParams = $"?accessToken={authorization}";
 
         var response = await _httpClient.GetAsync(_validateTokenUrl + queryParams);
 

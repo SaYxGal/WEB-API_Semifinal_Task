@@ -73,6 +73,8 @@ public class AuthenticationServiceImpl : IAuthenticationService
 
     public async Task<JWTTokenValidationResult> ValidateToken(string accessToken)
     {
+        accessToken = accessToken.StartsWith("Bearer") ? accessToken.Split(' ')[1] : accessToken;
+
         return await _tokenService.ValidateToken(accessToken);
     }
 }

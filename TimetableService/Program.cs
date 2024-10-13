@@ -1,8 +1,11 @@
-using HospitalService.Data;
-using HospitalService.Services.Hospitals;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
+using TimetableService.Configuration;
+using TimetableService.Data;
+using TimetableService.Services.Timetables;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,12 +19,13 @@ builder.Services.AddDbContext<DataContext>(options =>
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-builder.Services.AddTransient<IHospitalService, HospitalServiceImpl>();
+var baseAddresses = new BaseAddresses();
+builder.Configuration.GetSection("Services").Bind(baseAddresses);
+builder.Services.AddSingleton(baseAddresses);
 
-builder.Services.AddHttpClient("Auth", httpClient =>
-{
-    httpClient.BaseAddress = new Uri(builder.Configuration.GetSection("AuthService")["url"] ?? "");
-});
+builder.Services.AddTransient<ITimetableService, TimetableServiceImpl>();
+
+builder.Services.AddHttpClient();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -61,6 +65,9 @@ builder.Services.AddSwaggerGen(swagger =>
 
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -78,6 +85,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthorization();
 
 app.MapControllers();
 

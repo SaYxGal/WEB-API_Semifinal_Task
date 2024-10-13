@@ -63,7 +63,7 @@ public class TokenService
 
         return new JWTTokenValidationResult(
             result.IsValid,
-            result.ClaimsIdentity.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList());
+            result.IsValid ? result.ClaimsIdentity.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList() : []);
     }
 
     public async Task<UserTokenDTO> RefreshToken(UserTokenDTO tokens)
