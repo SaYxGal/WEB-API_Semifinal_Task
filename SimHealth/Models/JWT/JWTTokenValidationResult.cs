@@ -1,3 +1,3 @@
 ﻿namespace AuthenticationService.Models.JWT;
 
-public record JWTTokenValidationResult(bool IsValid, List<string> Roles);
+public record JWTTokenValidationResult(string? userId, bool IsValid, List<string> Roles);

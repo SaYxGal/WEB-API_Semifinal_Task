@@ -28,8 +28,8 @@ public class TokenService
 
         var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName!)
+            new Claim(JwtRegisteredClaimNames.Jti, user.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Sub, user.UserName!)
         };
 
         foreach (var userRole in userRoles)
@@ -62,6 +62,7 @@ public class TokenService
         var result = await new JwtSecurityTokenHandler().ValidateTokenAsync(accessToken, validationParameters);
 
         return new JWTTokenValidationResult(
+            result.ClaimsIdentity.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Jti)?.Value,
             result.IsValid,
             result.IsValid ? result.ClaimsIdentity.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList() : []);
     }

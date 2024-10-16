@@ -1,3 +1,3 @@
 ﻿namespace HospitalService.Models.JWT;
 
-public record JWTTokenValidationResult(bool IsValid, List<string> Roles);
+public record JWTTokenValidationResult(string? UserId, bool IsValid, List<string> Roles);

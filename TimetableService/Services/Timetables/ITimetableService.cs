@@ -10,13 +10,13 @@ public interface ITimetableService
 
     public Task DeleteRecordFromTimetable(int id);
 
-    public Task DeleteDoctorRecordsFromTimetable(int doctorId);
+    public Task DeleteDoctorRecordsFromTimetable(string doctorId);
 
     public Task DeleteHospitalRecordsFromTimetable(int hospitalId);
 
     public Task<List<GetTimetableRecordDTO>> GetHospitalTimetable(int hospitalId, string from, string to);
 
-    public Task<List<GetTimetableRecordDTO>> GetDoctorTimetable(int doctorId, string from, string to);
+    public Task<List<GetTimetableRecordDTO>> GetDoctorTimetable(string doctorId, string from, string to);
 
     public Task<List<GetTimetableRecordDTO>> GetHospitalRoomTimetable(int hospitalId, int roomId, string from, string to);
 }

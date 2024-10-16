@@ -12,7 +12,7 @@ using TimetableService.Data;
 namespace TimetableService.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20241013163741_Initial")]
+    [Migration("20241015171635_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -27,22 +27,33 @@ namespace TimetableService.Data.Migrations
 
             modelBuilder.Entity("TimetableService.Models.Appointments.Appointment", b =>
                 {
-                    b.Property<int>("TimetableId")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasColumnName("timetable_id");
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("Time")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("time");
 
+                    b.Property<int>("TimetableId")
+                        .HasColumnType("integer")
+                        .HasColumnName("timetable_id");
+
                     b.Property<string>("UserId")
                         .HasColumnType("text")
                         .HasColumnName("user_id");
 
-                    b.HasKey("TimetableId", "Time")
-                        .HasName("pk_appointment");
+                    b.HasKey("Id")
+                        .HasName("pk_appointments");
 
-                    b.ToTable("appointment", (string)null);
+                    b.HasIndex("TimetableId", "Time")
+                        .IsUnique()
+                        .HasDatabaseName("ix_appointments_timetable_id_time");
+
+                    b.ToTable("appointments", (string)null);
                 });
 
             modelBuilder.Entity("TimetableService.Models.Timetables.Timetable", b =>
@@ -89,7 +100,7 @@ namespace TimetableService.Data.Migrations
                         .HasForeignKey("TimetableId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_appointment_timetables_timetable_id");
+                        .HasConstraintName("fk_appointments_timetables_timetable_id");
                 });
 
             modelBuilder.Entity("TimetableService.Models.Timetables.Timetable", b =>

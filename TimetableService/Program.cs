@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Models;
 using System.Reflection;
 using TimetableService.Configuration;
 using TimetableService.Data;
+using TimetableService.Middleware;
 using TimetableService.Services.Timetables;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,13 +20,16 @@ builder.Services.AddDbContext<DataContext>(options =>
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-var baseAddresses = new BaseAddresses();
-builder.Configuration.GetSection("Services").Bind(baseAddresses);
-builder.Services.AddSingleton(baseAddresses);
-
 builder.Services.AddTransient<ITimetableService, TimetableServiceImpl>();
 
-builder.Services.AddHttpClient();
+var httpClientUri = new HttpClientRequestUri();
+builder.Configuration.GetSection("HttpClientRequestUri").Bind(httpClientUri);
+builder.Services.AddSingleton(httpClientUri);
+
+builder.Services.AddHttpClient("Auth", httpClient =>
+{
+    httpClient.BaseAddress = new Uri(builder.Configuration.GetSection("Services")["AuthService"] ?? "");
+});
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -86,7 +90,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
+app.UseMiddleware<JwtMiddleware>();
 
 app.MapControllers();
 

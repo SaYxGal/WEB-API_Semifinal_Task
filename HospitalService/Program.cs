@@ -1,4 +1,6 @@
+using HospitalService.Configuration;
 using HospitalService.Data;
+using HospitalService.Middleware;
 using HospitalService.Services.Hospitals;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -18,9 +20,13 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 builder.Services.AddTransient<IHospitalService, HospitalServiceImpl>();
 
+var httpClientUri = new HttpClientRequestUri();
+builder.Configuration.GetSection("HttpClientRequestUri").Bind(httpClientUri);
+builder.Services.AddSingleton(httpClientUri);
+
 builder.Services.AddHttpClient("Auth", httpClient =>
 {
-    httpClient.BaseAddress = new Uri(builder.Configuration.GetSection("AuthService")["url"] ?? "");
+    httpClient.BaseAddress = new Uri(builder.Configuration.GetSection("Services")["AuthService"] ?? "");
 });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -76,6 +82,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<JwtMiddleware>();
 
 app.UseHttpsRedirection();
 

@@ -9,7 +9,9 @@ public class AppointmentEntityTypeConfiguration : IEntityTypeConfiguration<Appoi
 {
     public void Configure(EntityTypeBuilder<Appointment> builder)
     {
-        builder.HasKey(i => new { i.TimetableId, i.Time });
+        builder.HasKey(i => i.Id);
+
+        builder.HasIndex(i => new { i.TimetableId, i.Time }).IsUnique();
 
         builder
             .HasOne<Timetable>()

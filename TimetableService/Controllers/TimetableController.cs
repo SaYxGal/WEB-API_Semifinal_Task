@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations;
-using TimetableService.Configuration;
+using TimetableService.Attributes;
 using TimetableService.Models;
-using TimetableService.Models.JWT;
 using TimetableService.Models.Timetables.DTO;
 using TimetableService.Services.Timetables;
 
@@ -13,113 +12,58 @@ namespace TimetableService.Controllers;
 public class TimetableController : ControllerBase
 {
     private readonly ITimetableService _timetableService;
-    private readonly HttpClient _httpClient;
-    private readonly BaseAddresses _baseAddresses;
-    private readonly string _validateTokenUrl = "api/Authentication/Validate";
-    private readonly string _doctorGetUrl = "api/Doctors/";
-    private readonly string _hospitalGetUrl = "api/Hospitals/";
 
-    public TimetableController(ITimetableService timetableService, IHttpClientFactory httpClientFactory, BaseAddresses baseAddresses)
+    public TimetableController(ITimetableService timetableService)
     {
         _timetableService = timetableService;
-        _httpClient = httpClientFactory.CreateClient();
-        _baseAddresses = baseAddresses;
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody][Required] AddTimetableRecordDTO dto, [FromHeader] string? authorization)
+    [Authorize(UserRole.Admin, UserRole.Manager)]
+    public async Task<IActionResult> Create([FromBody][Required] AddTimetableRecordDTO dto)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest();
-        }
+        await _timetableService.AddRecordToTimetable(dto);
 
-        var validRequestResponse = await ValidateUser(authorization);
-
-        if (validRequestResponse.IsValid)
-        {
-            if (validRequestResponse.Roles.Where(i => i == UserRole.Admin || i == UserRole.Manager).Any())
-            {
-                await ValidateTimetableValues(dto.DoctorId, dto.HospitalId, dto.Room, authorization);
-
-                if (ModelState.IsValid)
-                {
-                    await _timetableService.AddRecordToTimetable(dto);
-
-                    return Created();
-                }
-
-                return BadRequest(ModelState);
-            }
-            else
-            {
-                return StatusCode(403);
-            }
-        }
-        else
-        {
-            return Unauthorized();
-        }
+        return Created();
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update([FromRoute][Required] int id, [FromBody][Required] UpdateTimetableRecordDTO dto, [FromHeader] string? authorization)
+    [Authorize(UserRole.Admin, UserRole.Manager)]
+    public async Task<IActionResult> Update([FromRoute][Required] int id, [FromBody][Required] UpdateTimetableRecordDTO dto)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest();
-        }
+        await _timetableService.UpdateRecordFromTimetable(id, dto);
 
-        var validRequestResponse = await ValidateUser(authorization);
-
-        if (validRequestResponse.IsValid)
-        {
-            if (validRequestResponse.Roles.Where(i => i == UserRole.Admin || i == UserRole.Manager).Any())
-            {
-                await ValidateTimetableValues(dto.DoctorId, dto.HospitalId, dto.Room, authorization);
-
-                if (ModelState.IsValid)
-                {
-                    await _timetableService.UpdateRecordFromTimetable(id, dto);
-
-                    return NoContent();
-                }
-
-                return BadRequest(ModelState);
-            }
-            else
-            {
-                return StatusCode(403);
-            }
-        }
-        else
-        {
-            return Unauthorized();
-        }
+        return NoContent();
     }
 
-    [NonAction]
-    private async Task<JWTTokenValidationResult> ValidateUser(string? authorization)
+    [HttpDelete("{id}")]
+    [Authorize(UserRole.Admin, UserRole.Manager)]
+    public async Task<IActionResult> Delete([FromRoute][Required] int id)
     {
-        if (authorization == null)
-        {
-            return new JWTTokenValidationResult(false, []);
-        }
+        await _timetableService.DeleteRecordFromTimetable(id);
 
-        var queryParams = $"?accessToken={authorization}";
-
-        var validRequest = new HttpRequestMessage()
-        {
-            RequestUri = new Uri(_baseAddresses.AuthService + _validateTokenUrl + queryParams),
-            Method = HttpMethod.Get
-        };
-
-        var response = await _httpClient.SendAsync(validRequest);
-
-        return JsonConvert.DeserializeObject<JWTTokenValidationResult>(await response.Content.ReadAsStringAsync()) ?? throw new Exception();
+        return NoContent();
     }
 
-    [NonAction]
+    [HttpDelete("{doctorId}")]
+    [Authorize(UserRole.Admin, UserRole.Manager)]
+    public async Task<IActionResult> DeleteDoctorRecords([FromRoute][Required] string doctorId)
+    {
+        await _timetableService.DeleteDoctorRecordsFromTimetable(doctorId);
+
+        return NoContent();
+    }
+
+    [HttpDelete("{hospitalId}")]
+    [Authorize(UserRole.Admin, UserRole.Manager)]
+    public async Task<IActionResult> DeleteHospitalRecords([FromRoute][Required] int hospitalId)
+    {
+        await _timetableService.DeleteHospitalRecordsFromTimetable(hospitalId);
+
+        return NoContent();
+    }
+
+    /*[NonAction]
     private async Task ValidateTimetableValues(string doctorId, int hospitalId, string room, string? authorization)
     {
         var doctorRequest = new HttpRequestMessage()
@@ -161,5 +105,5 @@ public class TimetableController : ControllerBase
                 ModelState.AddModelError("", $"Кабинет с названием {room} не найден");
             }
         }
-    }
+    }*/
 }

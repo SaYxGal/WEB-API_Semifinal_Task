@@ -38,22 +38,28 @@ public class TimetableServiceImpl : ITimetableService
         await _dataContext.SaveChangesAsync();
     }
 
-    public Task DeleteDoctorRecordsFromTimetable(int doctorId)
+    public async Task DeleteDoctorRecordsFromTimetable(string doctorId)
     {
-        throw new NotImplementedException();
+        await _dataContext.Timetables
+            .Where(i => i.DoctorId == doctorId)
+            .ExecuteDeleteAsync();
     }
 
-    public Task DeleteHospitalRecordsFromTimetable(int hospitalId)
+    public async Task DeleteHospitalRecordsFromTimetable(int hospitalId)
     {
-        throw new NotImplementedException();
+        await _dataContext.Timetables
+            .Where(i => i.HospitalId == hospitalId)
+            .ExecuteDeleteAsync();
     }
 
-    public Task DeleteRecordFromTimetable(int id)
+    public async Task DeleteRecordFromTimetable(int id)
     {
-        throw new NotImplementedException();
+        await _dataContext.Timetables
+            .Where(i => i.Id == id)
+            .ExecuteDeleteAsync();
     }
 
-    public Task<List<GetTimetableRecordDTO>> GetDoctorTimetable(int doctorId, string from, string to)
+    public Task<List<GetTimetableRecordDTO>> GetDoctorTimetable(string doctorId, string from, string to)
     {
         throw new NotImplementedException();
     }
