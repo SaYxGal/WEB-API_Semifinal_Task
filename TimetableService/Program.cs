@@ -26,10 +26,13 @@ var httpClientUri = new HttpClientRequestUri();
 builder.Configuration.GetSection("HttpClientRequestUri").Bind(httpClientUri);
 builder.Services.AddSingleton(httpClientUri);
 
-builder.Services.AddHttpClient("Auth", httpClient =>
-{
-    httpClient.BaseAddress = new Uri(builder.Configuration.GetSection("Services")["AuthService"] ?? "");
-});
+var appServices = new AppServices();
+builder.Configuration.GetSection("Services").Bind(appServices);
+builder.Services.AddSingleton(appServices);
+
+builder.Services.AddHttpClient();
+
+builder.Services.AddHttpContextAccessor();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

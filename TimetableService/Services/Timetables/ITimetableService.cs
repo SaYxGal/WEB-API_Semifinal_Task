@@ -18,5 +18,5 @@ public interface ITimetableService
 
     public Task<List<GetTimetableRecordDTO>> GetDoctorTimetable(string doctorId, string from, string to);
 
-    public Task<List<GetTimetableRecordDTO>> GetHospitalRoomTimetable(int hospitalId, int roomId, string from, string to);
+    public Task<List<GetTimetableRecordDTO>> GetHospitalRoomTimetable(int hospitalId, string room, string from, string to);
 }

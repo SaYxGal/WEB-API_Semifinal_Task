@@ -17,7 +17,7 @@ public class AuthorizeAttribute : Attribute, IAuthorizationFilter
     {
         if (context.HttpContext.Items["Roles"] is List<string> userRoles)
         {
-            if (userRoles.Intersect(Roles).Count() != Roles.Length && Roles.Length != 0)
+            if (userRoles.Intersect(Roles).Count() == 0 && Roles.Length != 0)
             {
                 context.Result = new JsonResult(new { message = "Forbidden" }) { StatusCode = StatusCodes.Status403Forbidden };
             }

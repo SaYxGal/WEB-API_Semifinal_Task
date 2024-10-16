@@ -63,47 +63,24 @@ public class TimetableController : ControllerBase
         return NoContent();
     }
 
-    /*[NonAction]
-    private async Task ValidateTimetableValues(string doctorId, int hospitalId, string room, string? authorization)
+    [HttpGet("/Hospital/{hospitalId}")]
+    [Authorize]
+    public async Task<IActionResult> GetHospitalRecords([FromRoute][Required] int hospitalId, [FromQuery][Required] string from, [FromQuery][Required] string to)
     {
-        var doctorRequest = new HttpRequestMessage()
-        {
-            RequestUri = new Uri(_baseAddresses.AuthService + _doctorGetUrl + doctorId),
-            Method = HttpMethod.Get,
-        };
+        return Ok(await _timetableService.GetHospitalTimetable(hospitalId, from, to));
+    }
 
-        doctorRequest.Headers.TryAddWithoutValidation("Authorization", authorization);
+    [HttpGet("/Doctor/{doctorId}")]
+    [Authorize]
+    public async Task<IActionResult> GetDoctorRecords([FromRoute][Required] string doctorId, [FromQuery][Required] string from, [FromQuery][Required] string to)
+    {
+        return Ok(await _timetableService.GetDoctorTimetable(doctorId, from, to));
+    }
 
-        var isDoctorExistsResponse = await _httpClient.SendAsync(doctorRequest);
-
-        var hospitalRequest = new HttpRequestMessage()
-        {
-            RequestUri = new Uri(_baseAddresses.HospitalService + _hospitalGetUrl + hospitalId + "/Rooms"),
-            Method = HttpMethod.Get,
-        };
-
-        hospitalRequest.Headers.TryAddWithoutValidation("Authorization", authorization);
-
-        var hospitalRoomsResponse = await _httpClient.SendAsync(hospitalRequest);
-
-
-        if (!isDoctorExistsResponse.IsSuccessStatusCode)
-        {
-            ModelState.AddModelError("", $"Доктор с id {doctorId} не найден");
-        }
-
-        if (!hospitalRoomsResponse.IsSuccessStatusCode)
-        {
-            ModelState.AddModelError("", $"Больница с id {hospitalId} не найдена");
-        }
-        else
-        {
-            var rooms = JsonConvert.DeserializeObject<List<string>>(await hospitalRoomsResponse.Content.ReadAsStringAsync());
-
-            if (rooms == null || !rooms.Where(i => i == room).Any())
-            {
-                ModelState.AddModelError("", $"Кабинет с названием {room} не найден");
-            }
-        }
-    }*/
+    [HttpGet("/Hospital/{hospitalId}/Room/{room}")]
+    [Authorize(UserRole.Admin, UserRole.Manager, UserRole.Doctor)]
+    public async Task<IActionResult> GetHospitalRecords([FromRoute][Required] int hospitalId, [FromRoute][Required] string room, [FromQuery][Required] string from, [FromQuery][Required] string to)
+    {
+        return Ok(await _timetableService.GetHospitalRoomTimetable(hospitalId, room, from, to));
+    }
 }

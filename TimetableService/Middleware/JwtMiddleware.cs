@@ -9,12 +9,14 @@ public class JwtMiddleware
     private readonly RequestDelegate _next;
     private readonly HttpClient _httpClient;
     private readonly HttpClientRequestUri _httpClientRequestUri;
+    private readonly AppServices _services;
 
-    public JwtMiddleware(RequestDelegate next, IHttpClientFactory httpClientFactory, HttpClientRequestUri httpClientRequestUri)
+    public JwtMiddleware(RequestDelegate next, IHttpClientFactory httpClientFactory, HttpClientRequestUri httpClientRequestUri, AppServices services)
     {
         _next = next;
-        _httpClient = httpClientFactory.CreateClient("Auth");
+        _httpClient = httpClientFactory.CreateClient();
         _httpClientRequestUri = httpClientRequestUri;
+        _services = services;
     }
 
     public async Task Invoke(HttpContext context)
@@ -22,7 +24,14 @@ public class JwtMiddleware
         var token = context.Request.Headers.Authorization.FirstOrDefault()?.Split(" ").Last();
 
         var queryParams = $"?accessToken={token}";
-        var response = await _httpClient.GetAsync(_httpClientRequestUri.ValidateToken + queryParams);
+
+        var validateRequest = new HttpRequestMessage()
+        {
+            RequestUri = new Uri(_services.AuthService + _httpClientRequestUri.ValidateToken + queryParams),
+            Method = HttpMethod.Get,
+        };
+
+        var response = await _httpClient.SendAsync(validateRequest);
 
         var result = JsonConvert.DeserializeObject<JWTTokenValidationResult>(await response.Content.ReadAsStringAsync());
 
@@ -30,6 +39,7 @@ public class JwtMiddleware
         {
             context.Items["UserId"] = result.UserId;
             context.Items["Roles"] = result.Roles;
+            context.Items["Token"] = token;
         }
 
         await _next(context);
