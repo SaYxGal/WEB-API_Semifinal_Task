@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace AuthenticationService.Data;
-
-//TODO
 public class DBSeeder
 {
     public static async Task Seed(IServiceProvider serviceProvider)

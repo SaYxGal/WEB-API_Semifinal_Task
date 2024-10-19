@@ -67,4 +67,11 @@ public class AccountController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpGet("{id}")]
+    [Authorize(Roles = UserRole.Admin + ", " + UserRole.Manager + ", " + UserRole.Doctor)]
+    public async Task<IActionResult> GetById([FromRoute][Required] string id)
+    {
+        return Ok(await _accountService.FindById(id));
+    }
 }

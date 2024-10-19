@@ -14,4 +14,6 @@ public interface IAccountService
     public Task Create(CreateUserDTO dto);
 
     public Task Delete(string id);
+
+    public Task<GetUserDTO> FindById(string id);
 }

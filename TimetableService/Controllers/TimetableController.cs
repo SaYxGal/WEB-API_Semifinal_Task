@@ -48,43 +48,43 @@ public class TimetableController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{doctorId}")]
+    [HttpDelete("{id}")]
     [Authorize(UserRole.Admin, UserRole.Manager)]
-    public async Task<IActionResult> DeleteDoctorRecords([FromRoute][Required] string doctorId)
+    public async Task<IActionResult> DeleteDoctorRecords([FromRoute][Required] string id)
     {
-        await _timetableService.DeleteDoctorRecordsFromTimetable(doctorId);
+        await _timetableService.DeleteDoctorRecordsFromTimetable(id);
 
         return NoContent();
     }
 
-    [HttpDelete("{hospitalId}")]
+    [HttpDelete("{id}")]
     [Authorize(UserRole.Admin, UserRole.Manager)]
-    public async Task<IActionResult> DeleteHospitalRecords([FromRoute][Required] int hospitalId)
+    public async Task<IActionResult> DeleteHospitalRecords([FromRoute][Required] int id)
     {
-        await _timetableService.DeleteHospitalRecordsFromTimetable(hospitalId);
+        await _timetableService.DeleteHospitalRecordsFromTimetable(id);
 
         return NoContent();
     }
 
-    [HttpGet("/Hospital/{hospitalId}")]
+    [HttpGet("/Hospital/{id}")]
     [Authorize]
-    public async Task<IActionResult> GetHospitalRecords([FromRoute][Required] int hospitalId, [FromQuery][Required] string from, [FromQuery][Required] string to)
+    public async Task<IActionResult> GetHospitalRecords([FromRoute][Required] int id, [FromQuery][Required] string from, [FromQuery][Required] string to)
     {
-        return Ok(await _timetableService.GetHospitalTimetable(hospitalId, from, to));
+        return Ok(await _timetableService.GetHospitalTimetable(id, from, to));
     }
 
-    [HttpGet("/Doctor/{doctorId}")]
+    [HttpGet("/Doctor/{id}")]
     [Authorize]
-    public async Task<IActionResult> GetDoctorRecords([FromRoute][Required] string doctorId, [FromQuery][Required] string from, [FromQuery][Required] string to)
+    public async Task<IActionResult> GetDoctorRecords([FromRoute][Required] string id, [FromQuery][Required] string from, [FromQuery][Required] string to)
     {
-        return Ok(await _timetableService.GetDoctorTimetable(doctorId, from, to));
+        return Ok(await _timetableService.GetDoctorTimetable(id, from, to));
     }
 
-    [HttpGet("/Hospital/{hospitalId}/Room/{room}")]
+    [HttpGet("/Hospital/{id}/Room/{room}")]
     [Authorize(UserRole.Admin, UserRole.Manager, UserRole.Doctor)]
-    public async Task<IActionResult> GetHospitalRecords([FromRoute][Required] int hospitalId, [FromRoute][Required] string room, [FromQuery][Required] string from, [FromQuery][Required] string to)
+    public async Task<IActionResult> GetHospitalRecords([FromRoute][Required] int id, [FromRoute][Required] string room, [FromQuery][Required] string from, [FromQuery][Required] string to)
     {
-        return Ok(await _timetableService.GetHospitalRoomTimetable(hospitalId, room, from, to));
+        return Ok(await _timetableService.GetHospitalRoomTimetable(id, room, from, to));
     }
 
     [HttpGet("{id}/Appointments")]

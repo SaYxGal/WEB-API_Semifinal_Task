@@ -110,6 +110,19 @@ public class AccountService : IAccountService
         ProcessErrors(await _userManager.UpdateAsync(user));
     }
 
+    public async Task<GetUserDTO> FindById(string id)
+    {
+        var user = await Find(id);
+
+        var result = _mapper.Map<User, GetUserDTO>(user);
+
+        var roles = await _userManager.GetRolesAsync(user);
+
+        result.Roles = roles.ToList();
+
+        return result;
+    }
+
     private async Task<User> Find(string id)
     {
         var user = await _userManager.FindByIdAsync(id);
