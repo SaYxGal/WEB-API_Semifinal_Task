@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using TimetableService.Attributes;
 using TimetableService.Models;
 using TimetableService.Models.Timetables.DTO;
+using TimetableService.Services.Appointments;
 using TimetableService.Services.Timetables;
 
 namespace TimetableService.Controllers;
@@ -12,10 +13,12 @@ namespace TimetableService.Controllers;
 public class TimetableController : ControllerBase
 {
     private readonly ITimetableService _timetableService;
+    private readonly IAppointmentService _appointmentService;
 
-    public TimetableController(ITimetableService timetableService)
+    public TimetableController(ITimetableService timetableService, IAppointmentService appointmentService)
     {
         _timetableService = timetableService;
+        _appointmentService = appointmentService;
     }
 
     [HttpPost]
@@ -82,5 +85,21 @@ public class TimetableController : ControllerBase
     public async Task<IActionResult> GetHospitalRecords([FromRoute][Required] int hospitalId, [FromRoute][Required] string room, [FromQuery][Required] string from, [FromQuery][Required] string to)
     {
         return Ok(await _timetableService.GetHospitalRoomTimetable(hospitalId, room, from, to));
+    }
+
+    [HttpGet("{id}/Appointments")]
+    [Authorize]
+    public async Task<IActionResult> GetFreeAppointments([FromRoute][Required] int id)
+    {
+        return Ok(await _appointmentService.GetFreeAppointments(id));
+    }
+
+    [HttpPost("{id}/Appointments")]
+    [Authorize]
+    public async Task<IActionResult> AssignUserToAppointment([FromRoute][Required] int id, [FromQuery][Required] DateTime time)
+    {
+        await _appointmentService.AssignUserToAppointment(id, time);
+
+        return Created();
     }
 }

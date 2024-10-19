@@ -6,6 +6,7 @@ using System.Reflection;
 using TimetableService.Configuration;
 using TimetableService.Data;
 using TimetableService.Middleware;
+using TimetableService.Services.Appointments;
 using TimetableService.Services.Timetables;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +22,7 @@ builder.Services.AddDbContext<DataContext>(options =>
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 builder.Services.AddTransient<ITimetableService, TimetableServiceImpl>();
+builder.Services.AddTransient<IAppointmentService, AppointmentService>();
 
 var httpClientUri = new HttpClientRequestUri();
 builder.Configuration.GetSection("HttpClientRequestUri").Bind(httpClientUri);
@@ -94,6 +96,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseMiddleware<JwtMiddleware>();
+app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 app.MapControllers();
 

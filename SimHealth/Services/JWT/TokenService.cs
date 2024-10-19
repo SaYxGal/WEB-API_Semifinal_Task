@@ -62,7 +62,7 @@ public class TokenService
         var result = await new JwtSecurityTokenHandler().ValidateTokenAsync(accessToken, validationParameters);
 
         return new JWTTokenValidationResult(
-            result.ClaimsIdentity.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Jti)?.Value,
+            result.IsValid ? result.ClaimsIdentity.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Jti)?.Value : null,
             result.IsValid,
             result.IsValid ? result.ClaimsIdentity.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList() : []);
     }

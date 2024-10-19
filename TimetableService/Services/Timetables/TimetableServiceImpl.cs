@@ -2,6 +2,8 @@
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using System.Globalization;
+using System.Net;
 using System.Net.Http.Headers;
 using TimetableService.Configuration;
 using TimetableService.Data;
@@ -34,12 +36,22 @@ public class TimetableServiceImpl : ITimetableService
     {
         if (!(await DoesDoctorExists(dto.DoctorId)))
         {
-            throw new ApplicationException("Нет такого доктора");
+            throw new KeyNotFoundException("Нет такого доктора");
         }
 
         if (!(await DoesHospitalRoomExists(dto.HospitalId, dto.Room)))
         {
-            throw new ApplicationException("Нет такого кабинета в больнице");
+            throw new KeyNotFoundException("Нет такого кабинета в больнице");
+        }
+
+        if (_dataContext.Timetables.Where(i => i.DoctorId == dto.DoctorId && (dto.To <= i.To && dto.To > i.From) || (dto.From >= i.From && dto.From < i.To)).Any())
+        {
+            throw new ApplicationException($"Доктор c id - {dto.DoctorId} уже занят в это время.");
+        }
+
+        if (_dataContext.Timetables.Where(i => i.HospitalId == dto.HospitalId && i.Room == dto.Room && (dto.To <= i.To && dto.To > i.From) || (dto.From >= i.From && dto.From < i.To)).Any())
+        {
+            throw new ApplicationException($"Кабинет {dto.Room} уже занят в это время.");
         }
 
         var timetableRecord = new Timetable();
@@ -64,7 +76,7 @@ public class TimetableServiceImpl : ITimetableService
     {
         if (!(await DoesDoctorExists(doctorId)))
         {
-            throw new ApplicationException("Нет такого доктора");
+            throw new KeyNotFoundException("Нет такого доктора");
         }
 
         await _dataContext.Timetables
@@ -76,7 +88,7 @@ public class TimetableServiceImpl : ITimetableService
     {
         if (!(await DoesHospitalExists(hospitalId)))
         {
-            throw new ApplicationException("Нет такой больницы");
+            throw new KeyNotFoundException("Нет такой больницы");
         }
 
         await _dataContext.Timetables
@@ -95,60 +107,95 @@ public class TimetableServiceImpl : ITimetableService
     {
         if (!(await DoesDoctorExists(doctorId)))
         {
-            throw new ApplicationException("Нет такого доктора");
+            throw new KeyNotFoundException("Нет такого доктора");
         }
 
-        return await
-            _dataContext.Timetables
-                .Where(x => x.DoctorId == doctorId
-                    && x.From >= DateTime.Parse(from)
-                    && x.To <= DateTime.Parse(to))
-                .ProjectTo<GetTimetableRecordDTO>(_mapper.ConfigurationProvider)
-                .ToListAsync();
+        if (DateTime.TryParse(from, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTime parsedFrom)
+            && DateTime.TryParse(to, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTime parsedTo))
+        {
+            return await
+               _dataContext.Timetables
+                   .Where(x => x.DoctorId == doctorId
+                       && x.From >= parsedFrom
+                       && x.To <= parsedTo)
+                   .ProjectTo<GetTimetableRecordDTO>(_mapper.ConfigurationProvider)
+                   .ToListAsync();
+        }
+        else
+        {
+            throw new ApplicationException("Указанные даты некорректны");
+        }
     }
 
     public async Task<List<GetTimetableRecordDTO>> GetHospitalRoomTimetable(int hospitalId, string room, string from, string to)
     {
         if (!(await DoesHospitalRoomExists(hospitalId, room)))
         {
-            throw new ApplicationException("Нет такого кабинета в больнице");
+            throw new KeyNotFoundException("Нет такого кабинета в больнице");
         }
 
-        return await
-            _dataContext.Timetables
-                .Where(x => x.HospitalId == hospitalId && x.Room == room
-                    && x.From >= DateTime.Parse(from)
-                    && x.To <= DateTime.Parse(to))
-                .ProjectTo<GetTimetableRecordDTO>(_mapper.ConfigurationProvider)
-                .ToListAsync();
+        if (DateTime.TryParse(from, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTime parsedFrom)
+            && DateTime.TryParse(to, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTime parsedTo))
+        {
+            return await
+                _dataContext.Timetables
+                    .Where(x => x.HospitalId == hospitalId && x.Room == room
+                        && x.From >= parsedFrom
+                        && x.To <= parsedTo)
+                    .ProjectTo<GetTimetableRecordDTO>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
+        }
+        else
+        {
+            throw new ApplicationException("Указанные даты некорректны");
+        }
     }
 
     public async Task<List<GetTimetableRecordDTO>> GetHospitalTimetable(int hospitalId, string from, string to)
     {
         if (!(await DoesHospitalExists(hospitalId)))
         {
-            throw new ApplicationException("Нет такой больницы");
+            throw new KeyNotFoundException("Нет такой больницы");
         }
 
-        return await
-            _dataContext.Timetables
-                .Where(x => x.HospitalId == hospitalId
-                    && x.From >= DateTime.Parse(from)
-                    && x.To <= DateTime.Parse(to))
-                .ProjectTo<GetTimetableRecordDTO>(_mapper.ConfigurationProvider)
-                .ToListAsync();
+
+        if (DateTime.TryParse(from, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTime parsedFrom)
+            && DateTime.TryParse(to, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTime parsedTo))
+        {
+            return await
+                _dataContext.Timetables
+                    .Where(x => x.HospitalId == hospitalId
+                        && x.From >= parsedFrom
+                        && x.To <= parsedTo)
+                    .ProjectTo<GetTimetableRecordDTO>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
+        }
+        else
+        {
+            throw new ApplicationException("Указанные даты некорректны");
+        }
     }
 
     public async Task UpdateRecordFromTimetable(int id, UpdateTimetableRecordDTO dto)
     {
         if (!(await DoesDoctorExists(dto.DoctorId)))
         {
-            throw new ApplicationException("Нет такого доктора");
+            throw new KeyNotFoundException("Нет такого доктора");
         }
 
         if (!(await DoesHospitalRoomExists(dto.HospitalId, dto.Room)))
         {
-            throw new ApplicationException("Нет такого кабинета в больнице");
+            throw new KeyNotFoundException("Нет такого кабинета в больнице");
+        }
+
+        if (_dataContext.Timetables.Where(i => i.Id != id && i.DoctorId == dto.DoctorId && (dto.To <= i.To && dto.To > i.From) || (dto.From >= i.From && dto.From < i.To)).Any())
+        {
+            throw new ApplicationException($"Доктор c id - {dto.DoctorId} уже занят в это время.");
+        }
+
+        if (_dataContext.Timetables.Where(i => i.Id != id && i.HospitalId == dto.HospitalId && i.Room == dto.Room && (dto.To <= i.To && dto.To > i.From) || (dto.From >= i.From && dto.From < i.To)).Any())
+        {
+            throw new ApplicationException($"Кабинет {dto.Room} уже занят в это время.");
         }
 
         var timetableRecord = await
@@ -156,7 +203,7 @@ public class TimetableServiceImpl : ITimetableService
                 .Include(i => i.Appointments)
                 .Where(i => i.Id == id)
                 .FirstOrDefaultAsync()
-                ?? throw new ApplicationException($"Запись расписания с id - {id} не найдена");
+                ?? throw new KeyNotFoundException($"Запись расписания с id - {id} не найдена");
 
         if (timetableRecord.Appointments.Where(i => i.UserId != null).Any())
         {
@@ -203,6 +250,11 @@ public class TimetableServiceImpl : ITimetableService
 
         var response = await _httpClient.SendAsync(doctorRequest);
 
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            throw new UnauthorizedAccessException();
+        }
+
         return response.IsSuccessStatusCode;
     }
 
@@ -217,6 +269,11 @@ public class TimetableServiceImpl : ITimetableService
         hospitalRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _httpContextAccessor.HttpContext?.Items["Token"]?.ToString());
 
         var response = await _httpClient.SendAsync(hospitalRequest);
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            throw new UnauthorizedAccessException();
+        }
 
         if (response.IsSuccessStatusCode)
         {
@@ -246,6 +303,11 @@ public class TimetableServiceImpl : ITimetableService
         hospitalRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _httpContextAccessor.HttpContext?.Items["Token"]?.ToString());
 
         var response = await _httpClient.SendAsync(hospitalRequest);
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            throw new UnauthorizedAccessException();
+        }
 
         return response.IsSuccessStatusCode;
     }

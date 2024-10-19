@@ -1,3 +1,3 @@
 ﻿namespace TimetableService.Models.Appointments.DTO;
 
-public record GetAppointmentDTO(string DoctorName, string HospitalName, DateTime Time);
+public record GetAppointmentDTO(string? UserId, DateTime Time);
