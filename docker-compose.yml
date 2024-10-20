@@ -1,37 +1,38 @@
 version: '3.8'
 
 services:
-  postgres_auth:
+  postgres_account-service:
     image: postgres:15-alpine
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: user_password
-      POSTGRES_DB: AuthDB
+      POSTGRES_DB: AccountServiceDB
     ports:
       - "5432:5432"
     networks:
       net:
     volumes:
-      - data_auth:/var/lib/postgresql/data
-  auth:
-    build: ./AuthenticationService
+      - data_account:/var/lib/postgresql/data
+
+  account-service:
+    build: ./SimHealth
     ports:
       - "5000:80"
     networks:
       net:
     depends_on:
-      - postgres_auth
+      - postgres_account-service
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_HTTP_PORTS: 80
-      ConnectionStrings__DefaultConnection: "Host=postgres;Database=AuthDB;Username=user;Password=user_password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_account-service;Database=AccountServiceDB;Username=user;Password=user_password"
   
-  postgres_hospital:
+  postgres_hospital-service:
     image: postgres:15-alpine
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: user_password
-      POSTGRES_DB: HospitalDB
+      POSTGRES_DB: HospitalServiceDB
     ports:
       - "5433:5432"
     networks:
@@ -39,22 +40,81 @@ services:
     volumes:
       - data_hospital:/var/lib/postgresql/data
 
-  hospital:
+  hospital-service:
     build: ./HospitalService
     ports:
       - "5001:80"
     networks:
       net:
     depends_on:
-      - postgres_hospital
+      - postgres_hospital-service
+      - account-service
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_HTTP_PORTS: 80
-      ConnectionStrings__DefaultConnection: "Host=postgres;Database=HospitalDB;Username=user;Password=user_password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_hospital-service;Database=HospitalServiceDB;Username=user;Password=user_password"
+
+  postgres_timetable-service:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: user_password
+      POSTGRES_DB: TimetableServiceDB
+    ports:
+      - "5434:5432"
+    networks:
+      net:
+    volumes:
+      - data_timetable:/var/lib/postgresql/data
+
+  timetable-service:
+    build: ./TimetableService
+    ports:
+      - "5002:80"
+    networks:
+      net:
+    depends_on:
+      - postgres_timetable-service
+      - hospital-service
+      - account-service
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 80
+      ConnectionStrings__DefaultConnection: "Host=postgres_timetable-service;Database=TimetableServiceDB;Username=user;Password=user_password"
+
+  postgres_document-service:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: user_password
+      POSTGRES_DB: DocumentServiceDB
+    ports:
+      - "5435:5432"
+    networks:
+      net:
+    volumes:
+      - data_document:/var/lib/postgresql/data
+
+  document-service:
+    build: ./DocumentService
+    ports:
+      - "5003:80"
+    networks:
+      net:
+    depends_on:
+      - postgres_document-service
+      - hospital-service
+      - account-service
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 80
+      ConnectionStrings__DefaultConnection: "Host=postgres_document-service;Database=DocumentServiceDB;Username=user;Password=user_password"
 
 volumes:
-  data_auth:
+  data_account:
   data_hospital:
+  data_timetable:
+  data_document:
   
 networks:
   net:
