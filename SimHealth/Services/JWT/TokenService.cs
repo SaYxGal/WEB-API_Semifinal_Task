@@ -3,6 +3,7 @@ using AuthenticationService.Models.JWT;
 using AuthenticationService.Models.Users;
 using AuthenticationService.Models.Users.DTO;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -45,6 +46,7 @@ public class TokenService
         user.RefreshTokenExpiryTime = DateTime.Now.AddDays(_jwtSettings.RefreshTokenValidityInDays);
 
         await _userManager.UpdateAsync(user);
+        await _userManager.AddClaimsAsync(user, claims);
 
         var response = new UserTokenDTO
         (
@@ -67,22 +69,20 @@ public class TokenService
             result.IsValid ? result.ClaimsIdentity.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList() : []);
     }
 
-    public async Task<UserTokenDTO> RefreshToken(UserTokenDTO tokens)
+    public async Task<UserTokenDTO> RefreshToken(string refreshToken)
     {
-        var principal = GetPrincipalFromExpiredToken(tokens.AccessToken);
-        if (principal == null)
+        var user = await
+            _userManager.Users
+                .Where(i => i.RefreshToken == refreshToken)
+                .FirstOrDefaultAsync()
+                ?? throw new SecurityTokenException("Invalid refresh token");
+
+        if (user == null || user.RefreshTokenExpiryTime <= DateTime.Now)
         {
-            throw new SecurityTokenException("Invalid access token or refresh token");
+            throw new SecurityTokenException("Invalid refresh token");
         }
 
-        var user = await _userManager.FindByNameAsync(principal.Identity!.Name!);
-
-        if (user == null || user.RefreshToken != tokens.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
-        {
-            throw new SecurityTokenException("Invalid access token or refresh token");
-        }
-
-        var newAccessToken = GenerateAccessToken(principal.Claims.ToList());
+        var newAccessToken = GenerateAccessToken(await _userManager.GetClaimsAsync(user));
         var newRefreshToken = GenerateRefreshToken();
 
         user.RefreshToken = newRefreshToken;
@@ -103,7 +103,7 @@ public class TokenService
         return Convert.ToBase64String(randomNumber);
     }
 
-    private JwtSecurityToken GenerateAccessToken(List<Claim> claims)
+    private JwtSecurityToken GenerateAccessToken(IList<Claim> claims)
     {
         var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_jwtSettings.SecretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -128,19 +128,5 @@ public class TokenService
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey)),
             ValidateLifetime = true
         };
-    }
-
-    private ClaimsPrincipal? GetPrincipalFromExpiredToken(string? token)
-    {
-        var tokenValidationParameters = GetValidationParameters();
-
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
-        if (securityToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-        {
-            throw new SecurityTokenException("Invalid token");
-        }
-
-        return principal;
     }
 }

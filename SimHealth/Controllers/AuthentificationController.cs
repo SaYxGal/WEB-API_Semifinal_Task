@@ -47,8 +47,8 @@ public class AuthenticationController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Refresh([FromBody][Required] UserTokenDTO dto)
+    public async Task<IActionResult> Refresh([FromQuery][Required] string refreshToken)
     {
-        return Ok(await _authentificationService.RefreshToken(dto));
+        return Ok(await _authentificationService.RefreshToken(refreshToken));
     }
 }

@@ -13,5 +13,5 @@ public interface IAuthenticationService
 
     public Task<JWTTokenValidationResult> ValidateToken(string accessToken);
 
-    public Task<UserTokenDTO> RefreshToken(UserTokenDTO tokens);
+    public Task<UserTokenDTO> RefreshToken(string refreshToken);
 }

@@ -22,9 +22,9 @@ public class AuthenticationServiceImpl : IAuthenticationService
         _signInManager = signInManager;
     }
 
-    public async Task<UserTokenDTO> RefreshToken(UserTokenDTO tokens)
+    public async Task<UserTokenDTO> RefreshToken(string refreshToken)
     {
-        return await _tokenService.RefreshToken(tokens);
+        return await _tokenService.RefreshToken(refreshToken);
     }
 
     public async Task<UserTokenDTO> SignIn(SignInUserDTO dto)

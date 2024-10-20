@@ -37,19 +37,20 @@ public class AccountService : IAccountService
 
         _mapper.Map(dto, user);
 
+        using var tr = _dataContext.Database.BeginTransaction();
+
         ProcessErrors(await _userManager.CreateAsync(user, dto.Password));
 
         ProcessErrors(await _userManager.AddToRolesAsync(user, dto.Roles));
+
+        await tr.CommitAsync();
     }
 
     public async Task<GetUserDTO> Get(ClaimsPrincipal principal)
     {
-        var user = await _userManager.GetUserAsync(principal);
+        var userName = _userManager.GetUserId(principal);
 
-        if (user == null)
-        {
-            throw new ApplicationException("Пользователь не найден");
-        }
+        var user = await _userManager.FindByNameAsync(userName ?? string.Empty) ?? throw new ApplicationException("Пользователь не найден");
 
         var result = _mapper.Map<User, GetUserDTO>(user);
 
@@ -76,6 +77,8 @@ public class AccountService : IAccountService
     {
         var user = await Find(id);
 
+        using var tr = _dataContext.Database.BeginTransaction();
+
         if (dto is UpdateUserAdminDTO dtoAdmin)
         {
             _mapper.Map(dtoAdmin, user);
@@ -85,6 +88,10 @@ public class AccountService : IAccountService
             ProcessErrors(await _userManager.RemoveFromRolesAsync(user, currentRoles));
 
             ProcessErrors(await _userManager.AddToRolesAsync(user, dtoAdmin.Roles));
+
+            var currentClaims = await _userManager.GetClaimsAsync(user);
+
+            ProcessErrors(await _userManager.RemoveClaimsAsync(user, currentClaims));
         }
         else
         {
@@ -99,6 +106,8 @@ public class AccountService : IAccountService
         }
 
         ProcessErrors(await _userManager.UpdateAsync(user));
+
+        await tr.CommitAsync();
     }
 
     public async Task Delete(string id)
@@ -107,7 +116,15 @@ public class AccountService : IAccountService
 
         user.IsDeleted = true;
 
+        var currentClaims = await _userManager.GetClaimsAsync(user);
+
+        using var tr = _dataContext.Database.BeginTransaction();
+
+        ProcessErrors(await _userManager.RemoveClaimsAsync(user, currentClaims));
+
         ProcessErrors(await _userManager.UpdateAsync(user));
+
+        await tr.CommitAsync();
     }
 
     public async Task<GetUserDTO> FindById(string id)

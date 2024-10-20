@@ -48,7 +48,7 @@ public class TimetableController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("Doctor/{id}")]
     [Authorize(UserRole.Admin, UserRole.Manager)]
     public async Task<IActionResult> DeleteDoctorRecords([FromRoute][Required] string id)
     {
@@ -57,7 +57,7 @@ public class TimetableController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("Hospital/{id}")]
     [Authorize(UserRole.Admin, UserRole.Manager)]
     public async Task<IActionResult> DeleteHospitalRecords([FromRoute][Required] int id)
     {
@@ -66,21 +66,21 @@ public class TimetableController : ControllerBase
         return NoContent();
     }
 
-    [HttpGet("/Hospital/{id}")]
+    [HttpGet("Hospital/{id}")]
     [Authorize]
     public async Task<IActionResult> GetHospitalRecords([FromRoute][Required] int id, [FromQuery][Required] string from, [FromQuery][Required] string to)
     {
         return Ok(await _timetableService.GetHospitalTimetable(id, from, to));
     }
 
-    [HttpGet("/Doctor/{id}")]
+    [HttpGet("Doctor/{id}")]
     [Authorize]
     public async Task<IActionResult> GetDoctorRecords([FromRoute][Required] string id, [FromQuery][Required] string from, [FromQuery][Required] string to)
     {
         return Ok(await _timetableService.GetDoctorTimetable(id, from, to));
     }
 
-    [HttpGet("/Hospital/{id}/Room/{room}")]
+    [HttpGet("Hospital/{id}/Room/{room}")]
     [Authorize(UserRole.Admin, UserRole.Manager, UserRole.Doctor)]
     public async Task<IActionResult> GetHospitalRecords([FromRoute][Required] int id, [FromRoute][Required] string room, [FromQuery][Required] string from, [FromQuery][Required] string to)
     {
