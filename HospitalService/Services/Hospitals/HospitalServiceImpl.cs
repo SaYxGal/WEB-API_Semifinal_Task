@@ -23,7 +23,7 @@ public class HospitalServiceImpl : IHospitalService
     {
         var hospital = new Hospital()
         {
-            Rooms = dto.Rooms.Select(i => new Room { Name = i }).ToList()
+            Rooms = dto.Rooms.Distinct().Select(i => new Room { Name = i }).ToList()
         };
 
         _mapper.Map(dto, hospital);
@@ -53,9 +53,9 @@ public class HospitalServiceImpl : IHospitalService
         var hospital = await
             _dataContext.Hospitals
                 .Include(i => i.Rooms)
-                .Where(i => i.Id == id)
+                .Where(i => i.Id == id && !i.IsDeleted)
                 .FirstOrDefaultAsync()
-                ?? throw new ApplicationException();
+                ?? throw new KeyNotFoundException();
 
         return hospital.Rooms.Select(i => i.Name).ToList();
     }
@@ -75,9 +75,9 @@ public class HospitalServiceImpl : IHospitalService
         var hospital = await
             _dataContext.Hospitals
                 .Include(i => i.Rooms)
-                .Where(i => i.Id == id)
+                .Where(i => i.Id == id && !i.IsDeleted)
                 .FirstOrDefaultAsync()
-                ?? throw new ApplicationException();
+                ?? throw new KeyNotFoundException();
 
         _mapper.Map(dto, hospital);
 
@@ -101,7 +101,7 @@ public class HospitalServiceImpl : IHospitalService
         }
 
         // Добавляем недостающие комнаты
-        foreach (var room in dto.Rooms)
+        foreach (var room in dto.Rooms.Distinct())
         {
             var objRoom = new Room { Name = room };
 
@@ -120,6 +120,6 @@ public class HospitalServiceImpl : IHospitalService
             _dataContext.Hospitals
                 .Where(i => i.Id == id && !i.IsDeleted)
                 .FirstOrDefaultAsync()
-                ?? throw new ApplicationException();
+                ?? throw new KeyNotFoundException();
     }
 }

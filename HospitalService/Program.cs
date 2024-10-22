@@ -84,6 +84,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<JwtMiddleware>();
+app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 app.UseHttpsRedirection();
 
