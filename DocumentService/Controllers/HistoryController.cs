@@ -41,7 +41,7 @@ public class HistoryController : ControllerBase
         return Ok(await _historyService.GetHistoryRecord(id));
     }
 
-    [HttpGet("/Account/{id}")]
+    [HttpGet("Account/{id}")]
     public async Task<IActionResult> GetAccountHistory([FromRoute][Required] string id)
     {
         return Ok(await _historyService.GetAccountHistory(id));
